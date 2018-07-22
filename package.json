@@ -1,8 +1,8 @@
 {
   "name": "cursed-prince",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "An example of a stateful object built using visual automata-based programming.",
+  "description": "An example model built using visual automata-based programming.",
   "scripts": {
     "start": "npx babel-node --presets env index.js"
   },
@@ -13,8 +13,6 @@
     "babel-preset-env": "^1.6.1"
   },
   "dependencies": {
-    "rosmaro": "^0.7.1",
-    "rosmaro-in-memory-storage": "^1.2.0",
-    "rosmaro-process-wide-lock": "^1.2.0"
+    "rosmaro": "^0.8.0"
   }
 }

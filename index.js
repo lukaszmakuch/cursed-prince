@@ -1,5 +1,3 @@
-import makeStorage from 'rosmaro-in-memory-storage';
-import makeLock from 'rosmaro-process-wide-lock';
 import rosmaro from 'rosmaro';
 
 const graph = {
@@ -11,7 +9,7 @@ const graph = {
     },
     "arrows": {
       "Prince": {
-        "ate pizza": {
+        "ate a pizza": {
           "target": "Frog",
           "entryPoint": "start"
         }
@@ -32,25 +30,53 @@ const graph = {
   }
 };
 
-const Frog = {
-  introduceYourself: () => "Ribbit! Ribbit!"
-};
+const main = ({children, action}) => Object.values(children)[0]({action});
 
-const Prince = {
-  introduceYourself: () => "I am The Prince of Rosmaro!",
-  eat: ({dish}) => {
-    if (dish === 'pizza') return {arrow: 'ate pizza'};
+const Frog = ({action, context}) => {
+  switch (action.type) {
+    case 'INTRODUCE_YOURSELF':
+      return {result: "Ribbit! Ribbit!", arrows: [], context};
+    default:
+      return {result: undefined, arrows: [], context};
   }
 };
 
-const handlers = {Frog, Prince};
+const Prince = ({action, context, node}) => {
+  switch (action.type) {
+    case 'INTRODUCE_YOURSELF':
+      return {result: "I am The Prince of Rosmaro!", arrows: [], context};
+    case 'EAT':
+      const arrows = action.dish === 'pizza'
+        ? [[[node.id, 'ate a pizza']]]
+        : [];
+      return {result: undefined, arrows, context};
+    default:
+      return {result: undefined, arrows: [], context};
+  }
+};
 
-const storage = makeStorage();
-const lock = makeLock();
-const model = rosmaro({graph, handlers, storage, lock});
+const bindings = {
+  'main': {handler: main},
+  'main:Prince': {handler: Prince},
+  'main:Frog': {handler: Frog},
+};
 
-console.log(model.introduceYourself()); // I am The Prince of Rosmaro!
-console.log(model.eat({dish: 'yakisoba'})); // undefined
-console.log(model.introduceYourself()); // I am The Prince of Rosmaro!
-console.log(model.eat({dish: 'pizza'})); // undefined
-console.log(model.introduceYourself()); // Ribbit! Ribbit!
+const model = rosmaro({graph, bindings});
+
+let state;
+[
+  {type: 'INTRODUCE_YOURSELF'},
+  {type: 'EAT', dish: 'yakisoba'},
+  {type: 'INTRODUCE_YOURSELF'},
+  {type: 'EAT', dish: 'pizza'},
+  {type: 'INTRODUCE_YOURSELF'}
+].forEach(action => {
+  const {state: newState, result} = model({state, action});
+  state = newState;
+  console.log(result);
+});
+// I am The Prince of Rosmaro!
+// undefined
+// I am The Prince of Rosmaro!
+// undefined
+// Ribbit! Ribbit!
