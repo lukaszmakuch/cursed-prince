@@ -1,4 +1,7 @@
 import rosmaro from 'rosmaro';
+import {partialReturns, typeHandler, defaultHandler} from 'rosmaro-binding-utils';
+
+const handler = plan => partialReturns(typeHandler({defaultHandler})(plan));
 
 const graph = {
   "main": {
@@ -30,33 +33,17 @@ const graph = {
   }
 };
 
-const main = ({children, action}) => Object.values(children)[0]({action});
+const Frog = handler({
+  INTRODUCE_YOURSELF: () => "Ribbit! Ribbit!",
+});
 
-const Frog = ({action, context}) => {
-  switch (action.type) {
-    case 'INTRODUCE_YOURSELF':
-      return {result: "Ribbit! Ribbit!", arrows: [], context};
-    default:
-      return {result: undefined, arrows: [], context};
-  }
-};
-
-const Prince = ({action, context, node}) => {
-  switch (action.type) {
-    case 'INTRODUCE_YOURSELF':
-      return {result: "I am The Prince of Rosmaro!", arrows: [], context};
-    case 'EAT':
-      const arrows = action.dish === 'pizza'
-        ? [[[node.id, 'ate a pizza']]]
-        : [];
-      return {result: undefined, arrows, context};
-    default:
-      return {result: undefined, arrows: [], context};
-  }
-};
+const Prince = handler({
+  INTRODUCE_YOURSELF: () => "I am The Prince of Rosmaro!",
+  EAT: ({action}) => action.dish === 'pizza' ? {arrow: 'ate a pizza'} : undefined
+});
 
 const bindings = {
-  'main': {handler: main},
+  'main': {handler: defaultHandler},
   'main:Prince': {handler: Prince},
   'main:Frog': {handler: Frog},
 };
@@ -70,11 +57,9 @@ let state;
   {type: 'INTRODUCE_YOURSELF'},
   {type: 'EAT', dish: 'pizza'},
   {type: 'INTRODUCE_YOURSELF'}
-].forEach(action => {
-  const {state: newState, result} = model({state, action});
-  state = newState;
-  console.log(result);
-});
+].forEach(action => console.log(
+  ({state} = model({state, action})).result.data
+));
 // I am The Prince of Rosmaro!
 // undefined
 // I am The Prince of Rosmaro!

@@ -13,6 +13,7 @@
     "babel-preset-env": "^1.6.1"
   },
   "dependencies": {
-    "rosmaro": "^0.8.0"
+    "rosmaro": "^0.8.0",
+    "rosmaro-binding-utils": "0.0.3"
   }
 }
